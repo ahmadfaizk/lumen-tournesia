@@ -15,7 +15,22 @@ $router->get('/', function () use ($router) {
     return $router->app->version();
 });
 
-$router->post('/register', 'AuthController@register');
-$router->post('/login', 'AuthController@login');
+$router->group(['prefix' => 'api'], function() use ($router) {
 
-$router->get('/user', 'UserController@index');
+    $router->post('register', 'AuthController@register');
+    $router->post('login', 'AuthController@login');
+
+    $router->group(['prefix' => 'user'], function() use($router) {
+        $router->get('/', 'UserController@index');
+    });
+
+    $router->group(['prefix' => 'post'], function() use($router) {
+        $router->get('/', 'PostController@index');
+        $router->get('all', 'PostController@all');
+        $router->post('upload', 'PostController@upload');
+        $router->get('{id}', 'PostController@detail');
+        $router->post('{id}/update', 'PostController@update');
+        $router->get('{id}/delete', 'PostController@delete');
+    });
+});
+
