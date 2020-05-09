@@ -31,6 +31,12 @@ $router->group(['prefix' => 'api'], function() use ($router) {
         $router->get('{id}', 'PostController@detail');
         $router->post('{id}/update', 'PostController@update');
         $router->get('{id}/delete', 'PostController@delete');
+
+        $router->group(['prefix' => 'comment/{id}'], function() use($router) {
+            $router->post('/', 'RatingController@add');
+            $router->post('/update', 'RatingController@update');
+            $router->get('/delete', 'RatingController@delete');
+        });
     });
 });
 

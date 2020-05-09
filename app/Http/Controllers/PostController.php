@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\DB;
 use Auth;
 use Validator;
 use App\Post;
@@ -21,19 +22,59 @@ class PostController extends Controller
     }
 
     public function index() {
-        $user = Auth::user()->id;
+        $user = Auth::user();
+        $data = DB::table('posts')
+            ->leftJoin('ratings', 'ratings.id_post', '=', 'posts.id')
+            ->select('posts.*', DB::raw('AVG(ratings.votes) as votes'))
+            ->where('posts.id_user', $user->id)
+            ->groupBy('posts.id')
+            ->get();
         $posts = Post::where('id_user', $user)->get();
-        return response()->json($posts);
+        return response()->json([
+            'error' => false,
+            'message' => 'Success get My Posts',
+            'data' => $data
+        ]);
     }
 
     public function all() {
-        $posts = Post::all();
-        return response()->json($posts);
+        $data = DB::table('posts')
+            ->leftJoin('ratings', 'ratings.id_post', '=', 'posts.id')
+            ->select('posts.*', DB::raw('AVG(COALESCE(ratings.votes, 0)) as votes'))
+            ->groupBy('posts.id')
+            ->get();
+            return response()->json([
+                'error' => false,
+                'message' => 'Success get All Posts',
+                'data' => $data
+            ]);
     }
 
     public function detail($id) {
-        $posts = Post::find($id);
-        return response()->json($posts);
+        $data = DB::table('posts')
+            ->leftJoin('ratings', 'ratings.id_post', '=', 'posts.id')
+            ->select('posts.*', DB::raw('AVG(ratings.votes) as votes'))
+            ->where('posts.id', $id)
+            ->groupBy('posts.id')
+            ->get();
+        if($data == null) {
+            return response()->json([
+                'error' => true,
+                'message' => 'ID Post Not Found!',
+                'data' => null
+            ]);
+        }
+        $comments = DB::table('ratings as r')
+            ->join('users as u', 'u.id', '=', 'r.id_user')
+            ->select('r.votes', 'r.comment', 'u.name')
+            ->where('r.id_post', $id)
+            ->get();
+            return response()->json([
+                'error' => false,
+                'message' => 'Success get Detail Posts',
+                'data' => $data,
+                'comment' => $comments
+            ]);
     }
 
     public function upload(Request $request) {
