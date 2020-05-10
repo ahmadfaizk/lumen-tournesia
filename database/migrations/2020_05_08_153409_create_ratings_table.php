@@ -14,12 +14,13 @@ class CreateRatingsTable extends Migration
     public function up()
     {
         Schema::create('ratings', function (Blueprint $table) {
-            $table->integer('votes', 2);
+            $table->id();
+            $table->integer('votes');
             $table->string('comment');
             $table->unsignedBigInteger('id_post');
-            $table->foreign('id_post')->references('id')->on('posts');
+            $table->foreign('id_post')->references('id')->on('posts')->onDelete('cascade');
             $table->unsignedBigInteger('id_user');
-            $table->foreign('id_user')->references('id')->on('users');
+            $table->foreign('id_user')->references('id')->on('users')->onDelte('cascade');
             $table->timestamps();
         });
     }

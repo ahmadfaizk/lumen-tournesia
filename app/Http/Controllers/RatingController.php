@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\DB;
 use Auth;
 use Validator;
 use App\Post;
+use App\Rating;
 
 class RatingController extends Controller
 {
@@ -34,7 +35,11 @@ class RatingController extends Controller
             ]);
         }
         $user = Auth::user();
-        $rating = DB::table('ratings')
+        $rating = Rating::where([
+            'id_post' => $id,
+            'id_user' => $user->id
+        ])->first();
+        $ratings = DB::table('ratings')
             ->where('id_post', $id)
             ->where('id_user', $user->id)
             ->first();
@@ -46,16 +51,17 @@ class RatingController extends Controller
                 'data' => $rating
             ]);
         }
-        $data = DB::table('ratings')->insert([
+        $rating = new Rating([
             'votes' => $request->votes,
             'comment' => $request->comment,
             'id_user' => $user->id,
             'id_post' => $id,
         ]);
+        $rating->save();
         return response()->json([
             'error' => false,
             'message' => 'You succes comment on this post',
-            'data' => null
+            'data' => $rating
         ]);
     }
 
@@ -72,12 +78,7 @@ class RatingController extends Controller
                 'data' => null
             ]);
         }
-        $user = Auth::user();
-        $rating = DB::table('ratings')
-            ->where('id_post', $id)
-            ->where('id_user', $user->id)
-            ->first();
-
+        $rating = Rating::find($id);
         if ($rating == null) {
             return response()->json([
                 'error' => true,
@@ -85,27 +86,18 @@ class RatingController extends Controller
                 'data' => null
             ]);
         }
-        $data = DB::table('ratings')
-            ->where('id_user', $user->id)
-            ->where('id_post', $id)
-            ->update([
-                'votes' => $request->votes,
-                'comment' => $request->comment,
-            ]);
+        $rating->votes = $request->votes;
+        $rating->comment = $request->comment;
+        $rating->save();
         return response()->json([
             'error' => false,
-            'message' => 'You success update on this post',
-            'data' => $data
+            'message' => 'You success update on this rating',
+            'data' => $rating
         ]);
     }
 
     public function delete($id) {
-        $user = Auth::user();
-        $rating = DB::table('ratings')
-            ->where('id_post', $id)
-            ->where('id_user', $user->id)
-            ->first();
-
+        $rating = Rating::find($id);
         if ($rating == null) {
             return response()->json([
                 'error' => true,
@@ -113,14 +105,11 @@ class RatingController extends Controller
                 'data' => null
             ]);
         }
-        $data = DB::table('ratings')
-            ->where('id_user', $user->id)
-            ->where('id_post', $id)
-            ->delete();
+        $rating->delete();
         return response()->json([
             'error' => false,
-            'message' => 'You success delete this post',
-            'data' => $data
+            'message' => 'You success delete this rating',
+            'data' => $rating
         ]);
     }
 }

@@ -25,7 +25,7 @@ class PostController extends Controller
         $user = Auth::user();
         $data = DB::table('posts')
             ->leftJoin('ratings', 'ratings.id_post', '=', 'posts.id')
-            ->select('posts.*', DB::raw('AVG(ratings.votes) as votes'))
+            ->select('posts.*', DB::raw('AVG(COALESCE(ratings.votes, 0)) as votes'))
             ->where('posts.id_user', $user->id)
             ->groupBy('posts.id')
             ->get();
@@ -69,12 +69,12 @@ class PostController extends Controller
             ->select('r.votes', 'r.comment', 'u.name')
             ->where('r.id_post', $id)
             ->get();
-            return response()->json([
-                'error' => false,
-                'message' => 'Success get Detail Posts',
-                'data' => $data,
-                'comment' => $comments
-            ]);
+        return response()->json([
+            'error' => false,
+            'message' => 'Success get Detail Posts',
+            'data' => $data,
+            'comment' => $comments
+        ]);
     }
 
     public function upload(Request $request) {
