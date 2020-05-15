@@ -27,16 +27,26 @@ $router->group(['prefix' => 'api'], function() use ($router) {
     $router->group(['prefix' => 'post'], function() use($router) {
         $router->get('/', 'PostController@index');
         $router->get('all', 'PostController@all');
-        $router->post('upload', 'PostController@upload');
+        $router->post('add', 'PostController@add');
         $router->get('{id}', 'PostController@detail');
         $router->post('{id}/update', 'PostController@update');
         $router->get('{id}/delete', 'PostController@delete');
 
-        $router->group(['prefix' => 'comment/{id}'], function() use($router) {
-            $router->post('/', 'RatingController@add');
-            $router->post('/update', 'RatingController@update');
-            $router->get('/delete', 'RatingController@delete');
+        $router->group(['prefix' => '{id}/comment'], function() use($router) {
+            $router->get('/', 'CommentController@index');
+            $router->post('/add', 'CommentController@add');
+            $router->post('/update', 'CommentController@update');
+            $router->get('/delete', 'CommentController@delete');
         });
+
+        $router->get('image/{id}/delete', 'PostController@deleteImage');
+    });
+
+    $router->group(['prefix' => 'category'], function() use($router) {
+        $router->get('/', 'CategoryController@index');
+        $router->post('/add', 'CategoryController@add');
+        $router->post('/{id}/update', 'CategoryController@update');
+        $router->get('/{id}/delete', 'CategoryController@delete');
     });
 });
 

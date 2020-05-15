@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\DB;
 use Auth;
 use Validator;
 use App\Post;
+use App\Image;
 
 class PostController extends Controller
 {
@@ -24,12 +25,22 @@ class PostController extends Controller
     public function index() {
         $user = Auth::user();
         $data = DB::table('posts')
-            ->leftJoin('ratings', 'ratings.id_post', '=', 'posts.id')
-            ->select('posts.*', DB::raw('AVG(COALESCE(ratings.votes, 0)) as votes'))
+            ->leftJoin('comments', 'comments.id_post', '=', 'posts.id')
+            ->join('users', 'users.id', '=', 'posts.id_user')
+            ->join('categories', 'categories.id', '=', 'posts.id_category')
+            ->select('posts.*', 'users.name as user_name', 'categories.name as category', DB::raw('AVG(COALESCE(comments.votes, 0)) as votes'), DB::raw('COUNT(comments.votes) as votes_count'))
             ->where('posts.id_user', $user->id)
             ->groupBy('posts.id')
             ->get();
-        $posts = Post::where('id_user', $user)->get();
+        for ($i=0; $i<$data->count(); $i++) {
+            $images = Image::find(DB::table('post_image')
+                ->select('id_image')
+                ->where('id_post', $data[$i]->id)
+                ->get()
+                ->pluck('id_image')
+            );
+            $data[$i]->images = $images;
+        }
         return response()->json([
             'error' => false,
             'message' => 'Success get My Posts',
@@ -39,24 +50,37 @@ class PostController extends Controller
 
     public function all() {
         $data = DB::table('posts')
-            ->leftJoin('ratings', 'ratings.id_post', '=', 'posts.id')
-            ->select('posts.*', DB::raw('AVG(COALESCE(ratings.votes, 0)) as votes'))
+            ->leftJoin('comments', 'comments.id_post', '=', 'posts.id')
+            ->join('users', 'users.id', '=', 'posts.id_user')
+            ->join('categories', 'categories.id', '=', 'posts.id_category')
+            ->select('posts.*', 'users.name as user_name', 'categories.name as category', DB::raw('AVG(COALESCE(comments.votes, 0)) as votes'), DB::raw('COUNT(comments.votes) as votes_count'))
             ->groupBy('posts.id')
             ->get();
-            return response()->json([
-                'error' => false,
-                'message' => 'Success get All Posts',
-                'data' => $data
-            ]);
+        for ($i=0; $i<$data->count(); $i++) {
+            $images = Image::find(DB::table('post_image')
+                ->select('id_image')
+                ->where('id_post', $data[$i]->id)
+                ->get()
+                ->pluck('id_image')
+            );
+            $data[$i]->images = $images;
+        }
+        return response()->json([
+            'error' => false,
+            'message' => 'Success get All Posts',
+            'data' => $data
+        ]);
     }
 
     public function detail($id) {
         $data = DB::table('posts')
-            ->leftJoin('ratings', 'ratings.id_post', '=', 'posts.id')
-            ->select('posts.*', DB::raw('AVG(ratings.votes) as votes'))
+            ->leftJoin('comments', 'comments.id_post', '=', 'posts.id')
+            ->join('users', 'users.id', '=', 'posts.id_user')
+            ->join('categories', 'categories.id', '=', 'posts.id_category')
+            ->select('posts.*', 'users.name as user_name', 'categories.name as category', DB::raw('AVG(COALESCE(comments.votes, 0)) as votes'), DB::raw('COUNT(comments.votes) as votes_count'))
             ->where('posts.id', $id)
             ->groupBy('posts.id')
-            ->get();
+            ->first();
         if($data == null) {
             return response()->json([
                 'error' => true,
@@ -64,26 +88,33 @@ class PostController extends Controller
                 'data' => null
             ]);
         }
-        $comments = DB::table('ratings as r')
-            ->join('users as u', 'u.id', '=', 'r.id_user')
-            ->select('r.votes', 'r.comment', 'u.name')
-            ->where('r.id_post', $id)
+        $data->images = Image::find(DB::table('post_image')
+            ->select('id_image')
+            ->where('id_post', $id)
+            ->get()
+            ->pluck('id_image')
+        );
+        $data->comments = DB::table('comments as c')
+            ->join('users as u', 'u.id', '=', 'c.id_user')
+            ->select('c.votes', 'c.comment', 'u.name')
+            ->where('c.id_post', $id)
             ->get();
         return response()->json([
             'error' => false,
             'message' => 'Success get Detail Posts',
             'data' => $data,
-            'comment' => $comments
         ]);
     }
 
-    public function upload(Request $request) {
+    public function add(Request $request) {
         $validator = Validator::make($request->all(), [
             'name' => 'required|string',
+            'id_category' => 'required|int',
             'description' => 'required|string',
             'province' => 'required|string',
             'city' => 'required|string',
-            'image' => 'required|image'
+            'images' => 'required',
+            'images.*' => 'image'
         ]);
         if ($validator->fails()) {
             return response()->json([
@@ -93,9 +124,11 @@ class PostController extends Controller
                 'data' => null
             ]);
         }
-        $image_name = null;
-        if($request->hasFile('image')) {
-            $image_name = $this->saveImage($request->file('image'));
+        if($request->hasFile('images')) {
+            foreach ($request->file('images') as $image) {
+                $img_name = $this->saveImage($image);
+                $imgs[] = Image::create(['name' => $img_name])->id;
+            }
         }
         $user = Auth::user()->id;
         $post = new Post([
@@ -103,10 +136,16 @@ class PostController extends Controller
             'description' => $request->description,
             'province' => $request->province,
             'city' => $request->city,
-            'image' => $image_name,
+            'id_category' => $request->id_category,
             'id_user' => $user
         ]);
         $post->save();
+        foreach ($imgs as $img) {
+            DB::table('post_image')->insert([
+                'id_post' => $post->id,
+                'id_image' => $img
+            ]);
+        }
 
         return response()->json([
             'error' => false,
@@ -129,7 +168,9 @@ class PostController extends Controller
             'description' => 'required|string',
             'province' => 'required|string',
             'city' => 'required|string',
-            'image' => 'nullable|image'
+            'id_category' => 'required|int',
+            'images' => 'nullable',
+            'images.*' => 'image'
         ]);
         if ($validator->fails()) {
             return response()->json([
@@ -139,21 +180,46 @@ class PostController extends Controller
                 'data' => null
             ]);
         }
-
-        if($request->hasFile('image')) {
-            unlink('posts/' . $post->image);
-            $post->image = $this->saveImage($request->file('image'));
-        }
         $post->name = $request->name;
         $post->description = $request->description;
         $post->province = $request->province;
         $post->city = $request->city;
+        $post->id_category = $request->id_category;
         $post->save();
+
+        if($request->hasFile('images')) {
+            foreach ($request->file('images') as $image) {
+                $imgName = $this->saveImage($image);
+                $imgId = Image::create(['name' => $imgName])->id;
+                DB::table('post_image')->insert([
+                    'id_post' => $post->id,
+                    'id_image' => $imgId
+                ]);
+            }
+        }
 
         return response()->json([
             'error' => false,
             'message' => 'Succes Update Post!',
             'data' => $post
+        ]);
+    }
+
+    public function deleteImage($id) {
+        $img = Image::find($id);
+        if ($img == null) {
+            return response()->json([
+                'error' => true,
+                'message' => 'Image not found',
+                'data' => null
+            ]);
+        }
+        $img->delete();
+        unlink('posts/' . $img->name);
+        return response()->json([
+            'error' => false,
+            'message' => 'Succes Delete Image',
+            'data' => $img
         ]);
     }
 
@@ -166,7 +232,6 @@ class PostController extends Controller
                 'data' => null
             ]);
         }
-
         if ($post->image != null) {
             unlink('posts/' . $post->image);
         }
@@ -179,9 +244,8 @@ class PostController extends Controller
     }
 
     private function saveImage($image) {
-        $user = Auth::user()->id;
         $t = time();
-        $image_name = $user . '_' . $t . '.' . $image->getClientOriginalExtension();
+        $image_name = Str::random(5) . $t . '.' . $image->getClientOriginalExtension();
         $image->move('posts', $image_name);
         return $image_name;
     }

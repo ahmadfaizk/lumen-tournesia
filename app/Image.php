@@ -4,9 +4,9 @@ namespace App;
 
 use Illuminate\Database\Eloquent\Model;
 
-class Post extends Model 
+class Image extends Model 
 {
     protected $fillable = [
-        'name', 'description', 'province', 'city', 'id_category', 'id_user'
+        'name'
     ];
 }
