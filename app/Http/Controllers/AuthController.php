@@ -20,11 +20,16 @@ class AuthController extends Controller
         ]);
 
         if ($validator->fails()) {
+            $errors = $validator->errors();
             return response()->json([
                 'error' => true,
                 'message' => 'Register Failed!',
-                'errors' => $validator->errors(),
-                'data' => null,
+                'data' => [
+                    'name' => $errors->first('name'),
+                    'address' => $errors->first('address'),
+                    'email' => $errors->first('email'),
+                    'password' => $errors->first('password'),
+                ],
             ]);
         }
 
@@ -45,11 +50,10 @@ class AuthController extends Controller
         return response()->json([
             'error' => false,
             'message' => 'Register Success!',
-            'data' => $user,
-            'token' => [
-                'data' => $apiToken,
+            'data' => [
+                'token' => $apiToken,
                 'type' => 'Bearer'
-            ]
+            ],
         ]);
     }
 
@@ -61,11 +65,16 @@ class AuthController extends Controller
         ]);
 
         if ($validator->fails()) {
+            $errors = $validator->errors();
             return response()->json([
                 'error' => true,
                 'message' => 'Login Failed!',
-                'errors' => $validator->errors(),
-                'data' => null,
+                'data' => [
+                    'name' => $errors->first('name'),
+                    'address' => $errors->first('address'),
+                    'email' => $errors->first('email'),
+                    'password' => $errors->first('password'),
+                ],
             ]);
         }
 
@@ -82,11 +91,10 @@ class AuthController extends Controller
                 return response()->json([
                     'error' => false,
                     'message' => 'Login Succes!',
-                    'data' => $user,
-                    'token' => [
-                        'data' => $apiToken,
+                    'data' => [
+                        'token' => $apiToken,
                         'type' => 'Bearer'
-                    ]
+                    ],
                 ]);
             } else {
                 return response()->json([
