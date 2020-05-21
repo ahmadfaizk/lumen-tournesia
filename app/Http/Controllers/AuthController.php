@@ -24,12 +24,13 @@ class AuthController extends Controller
             return response()->json([
                 'error' => true,
                 'message' => 'Register Failed!',
-                'data' => [
+                'errors_detail' => [
                     'name' => $errors->first('name'),
                     'address' => $errors->first('address'),
                     'email' => $errors->first('email'),
                     'password' => $errors->first('password'),
                 ],
+                'data' => null
             ]);
         }
 
@@ -69,12 +70,13 @@ class AuthController extends Controller
             return response()->json([
                 'error' => true,
                 'message' => 'Login Failed!',
-                'data' => [
+                'errors_detail' => [
                     'name' => $errors->first('name'),
                     'address' => $errors->first('address'),
                     'email' => $errors->first('email'),
                     'password' => $errors->first('password'),
                 ],
+                'data' => null
             ]);
         }
 
@@ -100,18 +102,20 @@ class AuthController extends Controller
                 return response()->json([
                     'error' => true,
                     'message' => 'Login Failed!',
-                    'data' => [
+                    'errors_detail' => [
                         'password' => 'Password wrong'
-                    ]
+                    ],
+                    'data' => null
                 ]);
             }
         } else {
             return response()->json([
                 'error' => true,
                 'message' => 'Login Failed!',
-                'data' => [
+                'errors_detail' => [
                     'email' => 'Email Not Found!'
-                ]
+                ],
+                'data' => null
             ]);
         }
     }
