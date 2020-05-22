@@ -20,16 +20,10 @@ class AuthController extends Controller
         ]);
 
         if ($validator->fails()) {
-            $errors = $validator->errors();
             return response()->json([
                 'error' => true,
                 'message' => 'Register Failed!',
-                'errors_detail' => [
-                    'name' => $errors->first('name'),
-                    'address' => $errors->first('address'),
-                    'email' => $errors->first('email'),
-                    'password' => $errors->first('password'),
-                ],
+                'errors_detail' => $validator->errors()->all(),
                 'data' => null
             ]);
         }
@@ -66,16 +60,10 @@ class AuthController extends Controller
         ]);
 
         if ($validator->fails()) {
-            $errors = $validator->errors();
             return response()->json([
                 'error' => true,
                 'message' => 'Login Failed!',
-                'errors_detail' => [
-                    'name' => $errors->first('name'),
-                    'address' => $errors->first('address'),
-                    'email' => $errors->first('email'),
-                    'password' => $errors->first('password'),
-                ],
+                'errors_detail' => $validator->errors()->all(),
                 'data' => null
             ]);
         }

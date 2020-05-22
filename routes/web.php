@@ -28,7 +28,7 @@ $router->group(['prefix' => 'api'], function() use ($router) {
         $router->get('/', 'PostController@index');
         $router->get('all', 'PostController@all');
         $router->post('add', 'PostController@add');
-        $router->post('search', 'PostController@search');
+        $router->get('search', 'PostController@search');
         $router->get('{id}', 'PostController@detail');
         $router->post('{id}/update', 'PostController@update');
         $router->get('{id}/delete', 'PostController@delete');

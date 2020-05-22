@@ -52,7 +52,7 @@ class CommentController extends Controller
             return response()->json([
                 'error' => true,
                 'message' => 'Error Request',
-                'errors' => $validator->errors(),
+                'errors_detail' => $validator->errors()->all(),
                 'data' => null
             ]);
         }
@@ -103,7 +103,7 @@ class CommentController extends Controller
             return response()->json([
                 'error' => true,
                 'message' => 'Error Request',
-                'errors' => $validator->errors(),
+                'errors_detail' => $validator->errors()->all(),
                 'data' => null
             ]);
         }

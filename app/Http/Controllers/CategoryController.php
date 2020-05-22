@@ -15,7 +15,7 @@ class CategoryController extends Controller
      */
     public function __construct()
     {
-        #$this->middleware('auth');
+        $this->middleware('auth');
     }
 
     public function index()
@@ -36,7 +36,7 @@ class CategoryController extends Controller
             return response()->json([
                 'error' => true,
                 'message' => 'Error Request',
-                'errors' => $validator->errors(),
+                'errors_detail' => $validator->errors()->all(),
                 'data' => null
             ]);
         }
@@ -65,7 +65,7 @@ class CategoryController extends Controller
             return response()->json([
                 'error' => true,
                 'message' => 'Error Request',
-                'errors' => $validator->errors(),
+                'errors_detail' => $validator->errors()->all(),
                 'data' => null
             ]);
         }
