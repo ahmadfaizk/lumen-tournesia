@@ -15,9 +15,9 @@ class CreatePostImageTable extends Migration
     {
         Schema::create('post_image', function (Blueprint $table) {
             $table->unsignedBigInteger('id_post');
-            $table->foreign('id_post')->references('id')->on('posts');
+            $table->foreign('id_post')->references('id')->on('posts')>onDelete('cascade');;
             $table->unsignedBigInteger('id_image');
-            $table->foreign('id_image')->references('id')->on('images');
+            $table->foreign('id_image')->references('id')->on('images')>onDelete('cascade');;
         });
     }
 

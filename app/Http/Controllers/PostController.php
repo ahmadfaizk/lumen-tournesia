@@ -72,6 +72,32 @@ class PostController extends Controller
         ]);
     }
 
+    public function search(Request $request) {
+        $data = DB::table('posts')
+            ->leftJoin('comments', 'comments.id_post', '=', 'posts.id')
+            ->join('users', 'users.id', '=', 'posts.id_user')
+            ->join('categories', 'categories.id', '=', 'posts.id_category')
+            ->select('posts.*', 'users.name as user_name', 'categories.name as category', DB::raw('AVG(COALESCE(comments.votes, 0)) as votes'), DB::raw('COUNT(comments.votes) as votes_count'))
+            ->where('posts.name', 'like', '%'. $request->name . '%')
+            ->groupBy('posts.id')
+            ->get();
+        for ($i=0; $i<$data->count(); $i++) {
+            $images = Image::find(DB::table('post_image')
+                ->select('id_image')
+                ->where('id_post', $data[$i]->id)
+                ->get()
+                ->pluck('id_image')
+            );
+            $data[$i]->images = $images;
+        }
+        return response()->json([
+            'error' => false,
+            'message' => 'Success Search',
+            'data' => $data,
+            'query' => $request->name
+        ]);
+    }
+
     public function detail($id) {
         $data = DB::table('posts')
             ->leftJoin('comments', 'comments.id_post', '=', 'posts.id')
@@ -111,6 +137,7 @@ class PostController extends Controller
             'name' => 'required|string',
             'id_category' => 'required|int',
             'description' => 'required|string',
+            'address' => 'required|string',
             'province' => 'required|string',
             'city' => 'required|string',
             'images' => 'required',
@@ -134,6 +161,7 @@ class PostController extends Controller
         $post = new Post([
             'name' => $request->name,
             'description' => $request->description,
+            'address' => $request->address,
             'province' => $request->province,
             'city' => $request->city,
             'id_category' => $request->id_category,
@@ -166,6 +194,7 @@ class PostController extends Controller
         $validator = Validator::make($request->all(), [
             'name' => 'required|string',
             'description' => 'required|string',
+            'address' => 'required|string',
             'province' => 'required|string',
             'city' => 'required|string',
             'id_category' => 'required|int',
@@ -182,6 +211,7 @@ class PostController extends Controller
         }
         $post->name = $request->name;
         $post->description = $request->description;
+        $post->address = $request->address;
         $post->province = $request->province;
         $post->city = $request->city;
         $post->id_category = $request->id_category;
