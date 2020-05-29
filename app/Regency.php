@@ -4,10 +4,12 @@ namespace App;
 
 use Illuminate\Database\Eloquent\Model;
 
-class Image extends Model 
+class Regency extends Model 
 {
+    //protected $table = 'categories';
+
     protected $fillable = [
-        'name'
+        'id_province', 'name'
     ];
 
     public $timestamps = false;

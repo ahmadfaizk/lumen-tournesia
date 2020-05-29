@@ -49,5 +49,10 @@ $router->group(['prefix' => 'api'], function() use ($router) {
         $router->post('/{id}/update', 'CategoryController@update');
         $router->get('/{id}/delete', 'CategoryController@delete');
     });
+
+    $router->group(['prefix' => 'province'], function() use($router) {
+        $router->get('/', 'ProvinceController@index');
+        $router->get('{id}', 'RegencyController@index');
+    });
 });
 

@@ -18,8 +18,6 @@ class CreatePostsTable extends Migration
             $table->string('name');
             $table->text('description');
             $table->string('address');
-            $table->string('province');
-            $table->string('city');
             $table->unsignedBigInteger('id_user');
             $table->foreign('id_user')->references('id')->on('users')->onDelete('cascade');
             $table->timestamps();

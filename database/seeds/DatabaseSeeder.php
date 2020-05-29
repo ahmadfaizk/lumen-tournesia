@@ -12,5 +12,7 @@ class DatabaseSeeder extends Seeder
     public function run()
     {
         $this->call('CategorySeeder');
+        $this->call('ProvinceSeeder');
+        $this->call('RegencySeeder');
     }
 }

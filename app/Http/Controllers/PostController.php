@@ -20,17 +20,30 @@ class PostController extends Controller
     public function __construct()
     {
         $this->middleware('auth');
-    }
 
-    public function index() {
-        $user = Auth::user();
-        $data = DB::table('posts')
+        $this->query = DB::table('posts')
             ->leftJoin('comments', 'comments.id_post', '=', 'posts.id')
             ->join('users', 'users.id', '=', 'posts.id_user')
             ->join('categories', 'categories.id', '=', 'posts.id_category')
-            ->select('posts.*', 'users.name as user_name', 'categories.name as category', DB::raw('AVG(COALESCE(comments.votes, 0)) as votes'), DB::raw('COUNT(comments.votes) as votes_count'))
+            ->join('provinces', 'provinces.id', '=', 'posts.id_province')
+            ->join('regencies', 'regencies.id', '=', 'posts.id_regency')
+            ->select('posts.*',
+                'users.name as user_name',
+                'categories.name as category',
+                'provinces.name as province',
+                'regencies.name as regency',
+                DB::raw('AVG(COALESCE(comments.votes, 0)) as votes'),
+                DB::raw('COUNT(comments.votes) as votes_count')
+            )
+            ->groupBy('posts.id');
+    }
+
+    private $query;
+
+    public function index() {
+        $user = Auth::user();
+        $data = $this->query
             ->where('posts.id_user', $user->id)
-            ->groupBy('posts.id')
             ->get();
         for ($i=0; $i<$data->count(); $i++) {
             $images = Image::find(DB::table('post_image')
@@ -49,12 +62,7 @@ class PostController extends Controller
     }
 
     public function all() {
-        $data = DB::table('posts')
-            ->leftJoin('comments', 'comments.id_post', '=', 'posts.id')
-            ->join('users', 'users.id', '=', 'posts.id_user')
-            ->join('categories', 'categories.id', '=', 'posts.id_category')
-            ->select('posts.*', 'users.name as user_name', 'categories.name as category', DB::raw('AVG(COALESCE(comments.votes, 0)) as votes'), DB::raw('COUNT(comments.votes) as votes_count'))
-            ->groupBy('posts.id')
+        $data = $this->query
             ->get();
         for ($i=0; $i<$data->count(); $i++) {
             $images = Image::find(DB::table('post_image')
@@ -73,13 +81,8 @@ class PostController extends Controller
     }
 
     public function search(Request $request) {
-        $data = DB::table('posts')
-            ->leftJoin('comments', 'comments.id_post', '=', 'posts.id')
-            ->join('users', 'users.id', '=', 'posts.id_user')
-            ->join('categories', 'categories.id', '=', 'posts.id_category')
-            ->select('posts.*', 'users.name as user_name', 'categories.name as category', DB::raw('AVG(COALESCE(comments.votes, 0)) as votes'), DB::raw('COUNT(comments.votes) as votes_count'))
+        $data = $this->query
             ->where('posts.name', 'like', '%'. $request->name . '%')
-            ->groupBy('posts.id')
             ->get();
         for ($i=0; $i<$data->count(); $i++) {
             $images = Image::find(DB::table('post_image')
@@ -99,13 +102,8 @@ class PostController extends Controller
     }
 
     public function detail($id) {
-        $data = DB::table('posts')
-            ->leftJoin('comments', 'comments.id_post', '=', 'posts.id')
-            ->join('users', 'users.id', '=', 'posts.id_user')
-            ->join('categories', 'categories.id', '=', 'posts.id_category')
-            ->select('posts.*', 'users.name as user_name', 'categories.name as category', DB::raw('AVG(COALESCE(comments.votes, 0)) as votes'), DB::raw('COUNT(comments.votes) as votes_count'))
+        $data = $this->query
             ->where('posts.id', $id)
-            ->groupBy('posts.id')
             ->first();
         if($data == null) {
             return response()->json([
@@ -138,8 +136,8 @@ class PostController extends Controller
             'id_category' => 'required|int',
             'description' => 'required|string',
             'address' => 'required|string',
-            'province' => 'required|string',
-            'city' => 'required|string',
+            'id_province' => 'required|int',
+            'id_regency' => 'required|int',
             'images' => 'required',
             'images.*' => 'image'
         ]);
@@ -162,8 +160,8 @@ class PostController extends Controller
             'name' => $request->name,
             'description' => $request->description,
             'address' => $request->address,
-            'province' => $request->province,
-            'city' => $request->city,
+            'id_province' => $request->id_province,
+            'id_regency' => $request->id_regency,
             'id_category' => $request->id_category,
             'id_user' => $user
         ]);
@@ -195,8 +193,8 @@ class PostController extends Controller
             'name' => 'required|string',
             'description' => 'required|string',
             'address' => 'required|string',
-            'province' => 'required|string',
-            'city' => 'required|string',
+            'id_province' => 'required|int',
+            'id_regency' => 'required|int',
             'id_category' => 'required|int',
             'images' => 'nullable',
             'images.*' => 'image'
@@ -212,8 +210,8 @@ class PostController extends Controller
         $post->name = $request->name;
         $post->description = $request->description;
         $post->address = $request->address;
-        $post->province = $request->province;
-        $post->city = $request->city;
+        $post->id_province = $request->id_province;
+        $post->id_regency = $request->id_regency;
         $post->id_category = $request->id_category;
         $post->save();
 
