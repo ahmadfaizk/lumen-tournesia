@@ -8,7 +8,7 @@ Use composer to install this API
 
 1. composer install
 2. cp .env.example .env
-3. make database "mahasiswa"
+3. make database "tournesia"
 4. php artisan migrate --seed
 
 For start this API in your localhost
