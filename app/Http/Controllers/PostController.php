@@ -118,11 +118,6 @@ class PostController extends Controller
             ->get()
             ->pluck('id_image')
         );
-        $data->comments = DB::table('comments as c')
-            ->join('users as u', 'u.id', '=', 'c.id_user')
-            ->select('c.votes', 'c.comment', 'u.name')
-            ->where('c.id_post', $id)
-            ->get();
         return response()->json([
             'error' => false,
             'message' => 'Success get Detail Posts',

@@ -24,7 +24,12 @@ class CommentController extends Controller
     }
 
     public function index($id) {
-        $data = Comment::where('id_post', $id)->get();
+        //$data = Comment::where('id_post', $id)->get();
+        $data = DB::table('comments')
+            ->join('users', 'users.id', '=', 'comments.id_user')
+            ->select('comments.*', 'users.name as user_name')
+            ->where('comments.id_post', $id)
+            ->get();
         for ($i=0; $i<$data->count(); $i++) {
             $images = Image::find(DB::table('comment_image')
                 ->select('id_image')
