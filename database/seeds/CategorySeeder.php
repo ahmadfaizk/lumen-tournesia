@@ -16,6 +16,14 @@ class CategorySeeder extends Seeder
             ['name' => 'Taman'],
             ['name' => 'Pantai'],
             ['name' => 'Gunung'],
+            ['name' => 'Candi'],
+            ['name' => 'Monumen'],
+            ['name' => 'Landmark'],
+            ['name' => 'Gua'],
+            ['name' => 'Bukit'],
+            ['name' => 'Air Terjun'],
+            ['name' => 'Museum'],
+            ['name' => 'Wisata Religi']
         ]);
     }
 }
