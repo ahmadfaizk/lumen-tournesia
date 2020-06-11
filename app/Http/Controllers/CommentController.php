@@ -24,7 +24,36 @@ class CommentController extends Controller
     }
 
     public function index($id) {
-        //$data = Comment::where('id_post', $id)->get();
+        $user = Auth::user();
+        $data = DB::table('comments')
+            ->join('users', 'users.id', '=', 'comments.id_user')
+            ->select('comments.*', 'users.name as user_name')
+            ->where('comments.id_post', $id)
+            ->where('comments.id_user', $user->id)
+            ->first();
+        if ($data != null) {
+            $images = Image::find(DB::table('comment_image')
+                ->select('id_image')
+                ->where('id_comment', $data->id)
+                ->get()
+                ->pluck('id_image')
+            );
+            $data->images = $images;
+        } else {
+            return response()->json([
+                'error' => true,
+                'message' => 'You\'re not comment in this post',
+                'data' => $data,
+            ]);
+        }
+        return response()->json([
+            'error' => false,
+            'message' => 'Success get Comments',
+            'data' => $data,
+        ]);
+    }
+
+    public function all($id) {
         $data = DB::table('comments')
             ->join('users', 'users.id', '=', 'comments.id_user')
             ->select('comments.*', 'users.name as user_name')
@@ -48,7 +77,7 @@ class CommentController extends Controller
 
     public function add(Request $request, $id) {
         $validator = Validator::make($request->all(), [
-            'votes' => 'required|integer|max:5|min:1',
+            'votes' => 'required|string',
             'comment' => 'required|string',
             'images' => 'nullable',
             'images.*' => 'image'
@@ -99,7 +128,7 @@ class CommentController extends Controller
 
     public function update(Request $request, $id) {
         $validator = Validator::make($request->all(), [
-            'votes' => 'required|integer|max:5|min:1',
+            'votes' => 'required|string',
             'comment' => 'required|string',
             'images' => 'nullable',
             'images.*' => 'image'

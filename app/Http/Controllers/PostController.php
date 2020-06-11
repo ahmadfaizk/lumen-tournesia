@@ -112,6 +112,16 @@ class PostController extends Controller
                 'data' => null
             ]);
         }
+        $userId = Auth::user()->id;
+        $comment = DB::table('comments')
+            ->where('id_user', $userId)
+            ->where('id_post', $id)
+            ->first();
+        if ($comment != null) {
+            $data->is_comment = true;  
+        } else {
+            $data->is_comment = false; 
+        }
         $data->images = Image::find(DB::table('post_image')
             ->select('id_image')
             ->where('id_post', $id)
@@ -252,6 +262,14 @@ class PostController extends Controller
             return response()->json([
                 'error' => true,
                 'message' => 'ID Person Not Found!',
+                'data' => null
+            ]);
+        }
+        $user = Auth::user();
+        if ($post->id_user != $user->id) {
+            return response()->json([
+                'error' => true,
+                'message' => 'You\'re not allowed to delete this post',
                 'data' => null
             ]);
         }
