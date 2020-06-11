@@ -91,7 +91,7 @@ class AuthController extends Controller
                     'error' => true,
                     'message' => 'Login Failed!',
                     'errors_detail' => [
-                        'password' => 'Password wrong'
+                        'Password wrong'
                     ],
                     'data' => null
                 ]);
@@ -101,7 +101,7 @@ class AuthController extends Controller
                 'error' => true,
                 'message' => 'Login Failed!',
                 'errors_detail' => [
-                    'email' => 'Email Not Found!'
+                    'Email Not Found!'
                 ],
                 'data' => null
             ]);
